@@ -1,0 +1,43 @@
+{
+    "name": "logaretm/depo",
+    "description": "Simple and flexible repository pattern implementations.",
+    "keywords": [
+        "logaretm",
+        "depo",
+        "laravel",
+        "repository"
+    ],
+    "homepage": "https://github.com/logaretm/depo",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Abdelrahman Awad",
+            "email": "logaretm1@gmail.com"
+        }
+    ],
+    "require": {
+        "illuminate/support": "~5.1",
+        "php" : ">=5.4.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit" : "4.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Logaretm\\Depo\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Logaretm\\Depo\\Test\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "1.0-dev"
+        }
+    }
+}
