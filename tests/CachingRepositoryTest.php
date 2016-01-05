@@ -1,22 +1,25 @@
 <?php
 
+
 namespace Logaretm\Depo\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
+use Illuminate\Support\Facades\DB;
 use Logaretm\Depo\Repositories\Exceptions\RepositoryException;
 use Logaretm\Depo\Tests\Models\NotAModel;
 use Logaretm\Depo\Tests\Models\NotATask;
 use Logaretm\Depo\Tests\Models\Task;
+use Logaretm\Depo\Tests\Repositories\CachingTaskRepository;
 use Logaretm\Depo\Tests\Repositories\TaskRepository;
 use Orchestra\Testbench\TestCase;
 
-class RepositoryTest extends TestCase
+class CachingTaskRepositoryTest extends TestCase
 {
     use DatabaseTransactions;
 
     /**
-     * @var TaskRepository
+     * @var CachingTaskRepository
      */
     protected $repository;
 
@@ -35,6 +38,14 @@ class RepositoryTest extends TestCase
         $this->withFactories(__DIR__.'/factories');
     }
 
+    function prepareTest()
+    {
+        \Cache::flush();
+        factory(Task::class, 10)->create(['completed' => true]);
+        factory(Task::class, 8)->create(['completed' => false]);
+        $this->repository = new CachingTaskRepository(new TaskRepository(new Task), 10, $this->app['cache.store']);
+    }
+
     /**
      * Define environment setup.
      *
@@ -45,6 +56,7 @@ class RepositoryTest extends TestCase
     {
         // Setup default database to use sqlite :memory:
         $app['config']->set('database.default', 'testbench');
+        $app['config']->set('cache.default', 'redis');
         $app['config']->set('database.connections.testbench', [
             'driver'   => 'sqlite',
             'database' => ':memory:',
@@ -53,35 +65,21 @@ class RepositoryTest extends TestCase
     }
 
     /** @test */
-    function it_throws_an_exception_when_a_non_eloquent_object_is_passed()
+    function it_caches_the_results_of_queries_after_first_usage()
     {
-        $this->setExpectedException(RepositoryException::class);
+        $this->prepareTest();
+        DB::enableQueryLog();
+        $this->assertCount(8, $this->repository->inProgress()->get());
+        $this->assertCount(10, $this->repository->completed()->get());
 
-        $this->repository = new TaskRepository(new NotAModel);
-    }
+        $this->assertCount(2, $queries = DB::getQueryLog());
 
-    /** @test */
-    function it_throws_an_exception_when_a_non_supported_model_is_passed()
-    {
-        $this->setExpectedException(RepositoryException::class);
+        $this->assertCount(8, $this->repository->inProgress()->get());
+        $this->assertCount(10, $this->repository->completed()->get());
 
-        $this->repository = new TaskRepository(new NotATask);
-    }
+        $this->assertCount(2, $queries = DB::getQueryLog());
 
-    /** @test */
-    function it_allows_usage_of_query_builder_methods()
-    {
-        factory(Task::class, 10)->create(['completed' => false]);
-        factory(Task::class, 5)->create(['completed' => true]);
-
-        $this->repository = new TaskRepository(new Task);
-
-        $this->assertCount(10, $this->repository->inProgress()->get());
-        $this->assertCount(5, $this->repository->completed()->get());
-
-        Task::completed()->first()->update(['completed' => false]);
-
-        $this->assertCount(11, $this->repository->inProgress()->get());
-        $this->assertCount(4, $this->repository->completed()->get());
+        DB::disableQueryLog();
+        \Cache::flush();
     }
 }

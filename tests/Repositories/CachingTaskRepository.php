@@ -1,0 +1,30 @@
+<?php
+
+
+namespace Logaretm\Depo\Tests\Repositories;
+
+
+use Logaretm\Depo\Repositories\CachingRepository;
+
+class CachingTaskRepository extends CachingRepository
+{
+    /**
+     * Returns the primary cache key for this repository.
+     *
+     * @return mixed
+     */
+    public function getCacheTag()
+    {
+        return 'tasks';
+    }
+
+    /**
+     * Returns the cache tags to be forgotten.
+     *
+     * @return mixed
+     */
+    public function getForgetTags()
+    {
+        return ['tasks'];
+    }
+}
