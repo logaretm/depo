@@ -1,10 +1,10 @@
 <?php
 
 
-namespace App\Repositories;
+namespace Logaretm\Depo\Repositories;
 
-use Logaretm\Repositories\Contracts\CachingRepository as CachingRepositoryContract;
-use Logaretm\Repositories\Contracts\Repository as RepositoryImplementation;
+use Logaretm\Depo\Repositories\Contracts\CachingRepository as CachingRepositoryContract;
+use Logaretm\Depo\Repositories\Contracts\Repository as RepositoryImplementation;
 
 abstract class CachingRepository implements CachingRepositoryContract
 {

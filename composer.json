@@ -20,16 +20,17 @@
         "php" : ">=5.4.0"
     },
     "require-dev": {
-        "phpunit/phpunit" : "4.*"
+        "phpunit/phpunit" : "4.*",
+        "orchestra/testbench": "~3.0"
     },
     "autoload": {
         "psr-4": {
-            "Logaretm\\Depo\\": "src"
+            "Logaretm\\Depo\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Logaretm\\Depo\\Test\\": "tests"
+            "Logaretm\\Depo\\Tests\\": "tests/"
         }
     },
     "scripts": {

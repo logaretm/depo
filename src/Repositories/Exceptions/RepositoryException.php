@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Logaretm\Repositories\Exceptions;
+namespace Logaretm\Depo\Repositories\Exceptions;
 
 use Exception;
 

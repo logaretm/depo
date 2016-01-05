@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Logaretm\Repositories\Contracts;
+namespace Logaretm\Depo\Repositories\Contracts;
 
 interface Repository
 {

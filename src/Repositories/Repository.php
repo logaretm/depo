@@ -1,10 +1,10 @@
 <?php
 
 
-namespace App\Repositories;
+namespace Logaretm\Depo\Repositories;
 
-use Logaretm\Repositories\Contracts\Repository as RepositoryContract;
-use Logaretm\Repositories\Exceptions\RepositoryException;
+use Logaretm\Depo\Repositories\Contracts\Repository as RepositoryContract;
+use Logaretm\Depo\Repositories\Exceptions\RepositoryException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -69,13 +69,13 @@ abstract class Repository implements RepositoryContract
         // Make sure the provided model object is an instance of Model.
         if(! $model instanceof Model)
         {
-            throw new RepositoryException("{$model} is not of type " . Model::class);
+            throw new RepositoryException("model is not of type " . Model::class);
         }
 
         // Make sure the class name of the provided model is the supported repository model.
         if(get_class($model) !== $this->getRepositoryModel())
         {
-            throw new RepositoryException("{$model} is not supported by this repository, supported model type is " . $this->getRepositoryModel());
+            throw new RepositoryException("model is not supported by this repository, supported model type is " . $this->getRepositoryModel());
         }
 
 

@@ -6,7 +6,7 @@
  * Time: 06:13
  */
 
-namespace Logaretm\Repositories\Contracts;
+namespace Logaretm\Depo\Repositories\Contracts;
 
 
 interface CachingRepository extends Repository
