@@ -87,15 +87,22 @@ class CachingTaskRepositoryTest extends TestCase
     {
         $this->prepareTest();
         DB::enableQueryLog();
-        $this->assertCount(8, $this->repository->inProgress()->get());
-        $this->assertCount(10, $this->repository->completed()->get());
-
-        $this->assertCount(2, DB::getQueryLog());
 
         $this->assertCount(8, $this->repository->inProgress()->get());
         $this->assertCount(10, $this->repository->completed()->get());
 
         $this->assertCount(2, DB::getQueryLog());
+
+        $this->assertCount(8, $this->repository->inProgress()->get());
+        $this->assertCount(10, $this->repository->completed()->get());
+
+        $this->assertCount(2, DB::getQueryLog());
+
+        $this->assertCount(18, $this->repository->all());
+        $this->assertCount(3, DB::getQueryLog());
+
+        $this->assertCount(18, $this->repository->all());
+        $this->assertCount(3, DB::getQueryLog());
 
         DB::disableQueryLog();
         \Cache::flush();

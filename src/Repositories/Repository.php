@@ -102,7 +102,7 @@ abstract class Repository implements RepositoryContract
      */
     public function all($columns = array ('*'))
     {
-        $this->model->get($columns);
+        return $this->model->get($columns);
     }
 
     /**

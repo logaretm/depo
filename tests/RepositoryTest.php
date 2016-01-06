@@ -83,5 +83,11 @@ class RepositoryTest extends TestCase
 
         $this->assertCount(11, $this->repository->inProgress()->get());
         $this->assertCount(4, $this->repository->completed()->get());
+
+        // Set scope.
+        $this->repository->completed();
+
+        // Testing if all method ignores the previously set scope.
+        $this->assertCount(15, $this->repository->all());
     }
 }
