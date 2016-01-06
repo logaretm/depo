@@ -82,11 +82,10 @@ abstract class CachingRepository implements CachingRepositoryContract
      *
      * @param $prefix
      * @return mixed
-     * @internal param $seed
      */
     public function generateCacheKey($prefix)
     {
-        return $prefix . '.' . implode('.', $this->cacheKeywords);
+        return md5($prefix . '.' . implode('.', $this->cacheKeywords));
     }
 
     /**
@@ -110,7 +109,7 @@ abstract class CachingRepository implements CachingRepositoryContract
      */
     public function all($columns = array('*'))
     {
-        $key = $this->generateCacheKey('all');
+        $key = md5('all');
 
         $result = $this->cache->tags($this->getCacheTag())->remember($key, $this->duration, function () use($columns)
         {

@@ -184,4 +184,14 @@ abstract class Repository implements RepositoryContract
 
         return $this->model->destroy($id);
     }
+
+    /**
+     * Returns the current query builder object.
+     *
+     * @return Builder
+     */
+    public function getQuery()
+    {
+        return $this->query;
+    }
 }

@@ -65,6 +65,28 @@ class CachingTaskRepositoryTest extends TestCase
     }
 
     /** @test */
+    function it_generates_cache_key_based_on_the_query()
+    {
+        $this->prepareTest();
+        $this->repository->inProgress();
+        $firstKey = $this->repository->generateCacheKey('get');
+        $this->repository->get();
+
+        $this->repository->inProgress();
+
+        $secondKey = $this->repository->generateCacheKey('get');
+
+        $this->assertEquals($firstKey, $secondKey);
+
+        $this->repository->get();
+        $this->repository->completed();
+
+        $thirdKey = $this->repository->generateCacheKey('get');
+
+        $this->assertNotEquals($thirdKey, $secondKey);
+    }
+
+    /** @test */
     function it_caches_the_results_of_queries_after_first_usage()
     {
         $this->prepareTest();
@@ -72,12 +94,12 @@ class CachingTaskRepositoryTest extends TestCase
         $this->assertCount(8, $this->repository->inProgress()->get());
         $this->assertCount(10, $this->repository->completed()->get());
 
-        $this->assertCount(2, $queries = DB::getQueryLog());
+        $this->assertCount(2, DB::getQueryLog());
 
         $this->assertCount(8, $this->repository->inProgress()->get());
         $this->assertCount(10, $this->repository->completed()->get());
 
-        $this->assertCount(2, $queries = DB::getQueryLog());
+        $this->assertCount(2, DB::getQueryLog());
 
         DB::disableQueryLog();
         \Cache::flush();
