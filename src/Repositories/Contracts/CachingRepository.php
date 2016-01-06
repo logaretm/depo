@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: logar
- * Date: 1/4/2016
- * Time: 06:13
- */
 
 namespace Logaretm\Depo\Repositories\Contracts;
 

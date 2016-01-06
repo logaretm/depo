@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Logaretm\Depo\Repositories\Exceptions;
 
 use Exception;

@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Logaretm\Depo\Repositories;
 
 use Logaretm\Depo\Repositories\Contracts\CachingRepository as CachingRepositoryContract;

@@ -74,7 +74,7 @@ class RepositoryTest extends TestCase
         factory(Task::class, 10)->create(['completed' => false]);
         factory(Task::class, 5)->create(['completed' => true]);
 
-        $this->repository = new TaskRepository(new Task);
+        $this->repository = new TaskRepository;
 
         $this->assertCount(10, $this->repository->inProgress()->get());
         $this->assertCount(5, $this->repository->completed()->get());

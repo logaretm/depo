@@ -1,14 +1,10 @@
 <?php
 
-
 namespace Logaretm\Depo\Tests;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
-use Logaretm\Depo\Repositories\Exceptions\RepositoryException;
-use Logaretm\Depo\Tests\Models\NotAModel;
-use Logaretm\Depo\Tests\Models\NotATask;
 use Logaretm\Depo\Tests\Models\Task;
 use Logaretm\Depo\Tests\Repositories\CachingTaskRepository;
 use Logaretm\Depo\Tests\Repositories\TaskRepository;
@@ -43,7 +39,7 @@ class CachingTaskRepositoryTest extends TestCase
         \Cache::flush();
         factory(Task::class, 10)->create(['completed' => true]);
         factory(Task::class, 8)->create(['completed' => false]);
-        $this->repository = new CachingTaskRepository(new TaskRepository(new Task), 10, $this->app['cache.store']);
+        $this->repository = new CachingTaskRepository(new TaskRepository, 10, $this->app['cache.store']);
     }
 
     /**

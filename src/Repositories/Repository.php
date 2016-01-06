@@ -1,6 +1,5 @@
 <?php
 
-
 namespace Logaretm\Depo\Repositories;
 
 use Logaretm\Depo\Repositories\Contracts\Repository as RepositoryContract;
@@ -30,7 +29,7 @@ abstract class Repository implements RepositoryContract
      *
      * @param $model
      */
-    public function __construct($model)
+    public function __construct($model = null)
     {
         $this->makeModel($model);
     }
@@ -66,18 +65,23 @@ abstract class Repository implements RepositoryContract
      */
     protected function makeModel($model)
     {
+        if(! $model)
+        {
+            $model = app($this->getRepositoryModel());
+        }
+
+        // Make sure the class name of the provided model is the supported repository model.
+
+        elseif(get_class($model) !== $this->getRepositoryModel())
+        {
+            throw new RepositoryException("model is not supported by this repository, supported model type is " . $this->getRepositoryModel());
+        }
+
         // Make sure the provided model object is an instance of Model.
         if(! $model instanceof Model)
         {
             throw new RepositoryException("model is not of type " . Model::class);
         }
-
-        // Make sure the class name of the provided model is the supported repository model.
-        if(get_class($model) !== $this->getRepositoryModel())
-        {
-            throw new RepositoryException("model is not supported by this repository, supported model type is " . $this->getRepositoryModel());
-        }
-
 
         $this->model = $model;
         $this->query = $model->query();
