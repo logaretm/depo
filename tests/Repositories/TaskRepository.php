@@ -2,17 +2,17 @@
 
 namespace Logaretm\Depo\Tests\Repositories;
 
-use Logaretm\Depo\Repositories\Repository;
+use Logaretm\Depo\Repositories\RepositoryBase;
 use Logaretm\Depo\Tests\Models\Task;
 
-class TaskRepository extends Repository
+class TaskRepository extends RepositoryBase
 {
     /**
      * Yep. that is it.
      *
      * @return mixed
      */
-    function getRepositoryModel()
+    public function getRepositoryModel()
     {
         return Task::class;
     }

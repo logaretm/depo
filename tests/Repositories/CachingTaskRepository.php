@@ -4,9 +4,9 @@
 namespace Logaretm\Depo\Tests\Repositories;
 
 
-use Logaretm\Depo\Repositories\CachingRepository;
+use Logaretm\Depo\Repositories\CachingRepositoryBase;
 
-class CachingTaskRepository extends CachingRepository
+class CachingTaskRepository extends CachingRepositoryBase
 {
     /**
      * Returns the primary cache key for this repository.

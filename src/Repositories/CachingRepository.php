@@ -1,230 +1,105 @@
 <?php
 
+
 namespace Logaretm\Depo\Repositories;
 
-use Logaretm\Depo\Repositories\Contracts\CachingRepository as CachingRepositoryContract;
-use Logaretm\Depo\Repositories\Contracts\Repository as RepositoryImplementation;
 
-abstract class CachingRepository implements CachingRepositoryContract
+use Illuminate\Database\Eloquent\Model;
+
+class CachingRepository extends CachingRepositoryBase
 {
-
     /**
-     * The duration for which the items will be cached.
-     *
-     * @var integer
+     * @var
      */
-    protected $duration;
+    protected $primaryCacheTag;
 
     /**
      * @var
      */
-    protected $cache;
-
-    /**
-     * @var RepositoryImplementation
-     */
-    protected $repository;
-
-    /**
-     * Makes sure that specific query methods gets logged to generate unique cache keys.
-     *
-     * @var array
-     */
-    protected $cacheKeywords = [];
+    protected $forgetCacheTags;
 
     /**
      * CachingRepository constructor.
-     * @param $repository
-     * @param $duration
+     * @param RepositoryBase|Model $repository
+     * @param int $duration
      * @param $cache
+     * @param array $options
      */
-    public function __construct($repository, $duration, $cache)
+    public function __construct($repository, $duration, $cache, array $options = [])
     {
-        $this->repository = $repository;
-        $this->duration = $duration;
-        $this->cache = $cache;
-    }
-
-    /**
-     * @param $method
-     * @param $arguments
-     * @return $this
-     */
-    public function __call ($method, $arguments)
-    {
-        $this->addKeyword($method . implode('.', $arguments));
-
-        $value = call_user_func_array([$this->repository, $method], $arguments);
-
-        if(! $value instanceof Repository)
+        // If the "repository" is actually a model, create an underlying repository object and use it.
+        if($repository instanceof Model)
         {
-            $this->resetScope();
-
-            return $value;
+            $repository = new Repository($repository);
         }
 
-        return $this;
+        parent::__construct($repository, $duration, $cache);
+        $this->applyOptions($options);
     }
 
     /**
-     * Clears cache from entries specific to the repository.
-     * Note: You can use cache tags.
-     * @return mixed
-     */
-    public function forget()
-    {
-        $this->cache->tags($this->getCacheTags())->flush();
-    }
-
-    /**
-     * Gets a unique key for the to-be cached value.
+     * Applies the options passed to the constructor.
      *
-     * @param $prefix
-     * @return mixed
+     * @param array $options
      */
-    public function generateCacheKey($prefix)
+    protected function applyOptions(array $options)
     {
-        return md5($prefix . '.' . implode('.', $this->cacheKeywords));
-    }
-
-    /**
-     * Adds a keyword to the current cache keywords array.
-     *
-     * @param $keyword
-     */
-    public function addKeyword($keyword)
-    {
-        if($keyword && ! in_array($keyword, $this->cacheKeywords))
+        if(array_key_exists('primaryTag', $options) && $options['primaryTag'])
         {
-            $this->cacheKeywords[] = $keyword;
+            $this->primaryCacheTag = $options['primaryTag'];
+        }
+
+        else
+        {
+            $this->applyDefaultPrimaryTag();
+        }
+
+        if(array_key_exists('forgetTags', $options) && $options['forgetTags'])
+        {
+            $this->forgetCacheTags = $options['forgetTags'];
+        }
+
+        else
+        {
+            $this->applyDefaultForgets();
         }
     }
 
     /**
-     * Gets all records for the model, ignoring scopes and constrains. caches the results.
-     *
-     * @param array $columns
-     * @return mixed
+     * Applies sensible defaults to the primary cache key.
      */
-    public function all($columns = array('*'))
+    protected function applyDefaultPrimaryTag()
     {
-        $key = md5('all');
-
-        $result = $this->cache->tags($this->getCacheTag())->remember($key, $this->duration, function () use($columns)
-        {
-            return $this->repository->all();
-        });
-
-        $this->resetScope();
-
-        return $result;
+        $this->primaryCacheTag = str_slug($this->repository->getRepositoryModel());
     }
 
     /**
-     * Gets the query records and caches them.
-     *
-     * @param array $columns
-     * @return mixed
+     * Applies sensible default to the forgets cache keys.
      */
-    public function get($columns = array('*'))
+    protected function applyDefaultForgets()
     {
-        $key = $this->generateCacheKey('get');
-
-        $result = $this->cache->tags($this->getCacheTag())->remember($key, $this->duration, function () use($columns)
-        {
-            return $this->repository->get($columns);
-        });
-
-        $this->resetScope();
-
-        return $result;
+        $this->forgetCacheTags = [
+            str_slug($this->repository->getRepositoryModel())
+        ];
     }
 
     /**
-     * Gets and caches a paginate for the resource.
+     * Gets the primary cache key for this repository entries.
      *
-     * @param int $perPage
-     * @param int $page
-     * @param array $columns
      * @return mixed
      */
-    public function paginate($perPage = 15, $page = 1, $columns = array('*'))
+    public function getCacheTag()
     {
-        $key = $this->generateCacheKey('paginate' . $perPage . ($page > 1 ? '.' . $page : ''));
-
-        $result = $this->cache->tags($this->getCacheTag())->remember($key, $this->duration, function () use($perPage, $columns, $page)
-        {
-            return $this->repository->paginate($perPage, $page, $columns);
-        });
-
-        $this->resetScope();
-
-        return $result;
+        return $this->repository->getRepositoryModel();
     }
-
-    /**
-     * Creates a new record.
-     *
-     * @param array $attributes
-     * @return mixed
-     */
-    public function create(array $attributes)
-    {
-        $model = $this->repository->create($attributes);
-        $this->forget();
-
-        return $model;
-    }
-
-    /**
-     * updates an existing record.
-     *
-     * @param $id
-     * @param array $attributes
-     * @return mixed
-     */
-    public function update($id, array $attributes)
-    {
-        $updated = $this->repository->update($id, $attributes);
-        $this->forget();
-
-        return $updated;
-    }
-
-    /**
-     * Deletes a record.
-     *
-     * @param $id
-     * @return mixed
-     */
-    public function delete($id)
-    {
-        $deleted = $this->repository->delete($id);
-        $this->forget();
-
-        return $deleted;
-    }
-
-    /**
-     * Returns the primary cache key for this repository.
-     *
-     * @return mixed
-     */
-    abstract public function getCacheTag();
 
     /**
      * Returns the cache tags to be forgotten.
      *
      * @return mixed
      */
-    abstract public function getForgetTags();
-
-    /**
-     * Resets the query scope.
-     */
-    public function resetScope()
+    public function getForgetTags()
     {
-        $this->cacheKeywords = [];
-        $this->repository->resetScope();
+        return $this->forgetCacheTags;
     }
 }
