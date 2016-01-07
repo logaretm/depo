@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Task extends Model
 {
+    /**
+     * @var array
+     */
     protected $fillable = [
         'body',
         'completed'

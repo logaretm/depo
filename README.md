@@ -1,5 +1,5 @@
 # Depo
-Simple and flexible repository pattern implementations.
+Simple and flexible repository pattern implementations for the laravel framework.
 
 ## Motivation
 
@@ -24,21 +24,92 @@ This package can be installed easily via composer just run:
 
 ## Summary
 
-This package provides a base classes and contracts for the usage of a repository class.
+This package provides base classes and contracts for the usage of a repository class. along with a general implementation of both base classes.
 
-The `Repository` class only serves as a wrapper around the Eloquent Model.  Which can be a good place to put complex queries.
+The `RepositoryBase` and `Repository` classes only serves as a wrapper around the Eloquent Model.  Which can be a good place to put complex queries.
 
-The `CachingRepository` class is a decorator for the `Repository` objects, it caches the query results using cache tags, so make sure your cache driver supports the cache tags functionality (redis/memcache).
+The `CachingRepositoryBase` class is a decorator for the `RepositoryBase` objects, it caches the query results using cache tags, so make sure your cache driver supports the cache tags functionality (redis/memcache).
 
-The `CachingRepository` also allows creating/updating/deleting of Model records in the database. it clears the relevant cached results after any of those operations are executed, then the new results will be cached when the next query executes, making sure your queries are up to date with the database.
-
-So if you are upset about the "remember" method removed from eloquent query builder I believe my implementation is a modest alternative.
+The `CachingRepositoryBase` also allows creating/updating/deleting of Model records in the database. it clears the relevant cached results after any of those operations are executed, then the new results will be cached when the next query executes, making sure your queries are up to date with the database.
 
 ## Usage
 
-using a Task model as an example:
+There are many ways to use the classes. But first the next snippets assumes that  a `Task` model exist.
 
-Extend the Repository base class and provide an implementation for the `getRepositoryModel` method.
+```php
+class Task extends Model
+{
+    /**
+     * @var array
+     */
+    protected $fillable = [
+        'body',
+        'completed'
+    ];
+
+
+    /**
+     * @param $query
+     * @return mixed
+     */
+    public function scopeCompleted ($query)
+    {
+        return $query->where('completed', true);
+    }
+
+
+    /**
+     * @param $query
+     * @return mixed
+     */
+    public function scopeInProgress ($query)
+    {
+        return $query->where('completed', false);
+    }
+}
+```
+
+Its a basic model with two scopes.
+
+Now to use the classes you have multiple ways, use whatever suits your needs.
+
+### Using the General implementations
+
+using the `Repository` class you can create a repository for the `Task` model easily using dependency injection.
+
+```php
+$repository = new Repository(new Task);
+```
+
+Then if we need a caching repository for the `Task` model we only need to inject the previously created repository object into the constructor. Which takes a repository (or a model) and a remembering duration in minutes, and a cache store that supports tags.
+
+```php
+$cachingRepository = new CachingRepository($repository, 10, app()['cache.store']);
+```
+
+you can also instantiate the caching repository without having to create an underlying one, internally it will create one for you.
+
+```php
+$cachingRepository = new CachingRepository(new Task, 10, app()['cache.store']);
+```
+
+now you can do some querying, note that it both classes provide a fluent API, you can chain methods as long the last called method does not return a Builder object.
+
+```php
+$completedTasks = $cachingRepository->where('completed', true)->get();
+```
+
+or use the scope we've previously created.
+```php
+$completedTasks = $cachingRepository->completed()->get();
+```
+while those two classes provide a simple and straight forward. they do not solve some of the problems that the repository pattern can solve. For example what if you have some complex query, so complex that mudding the model with it won't be ideal in your case, you need something that is "resposible" for this task.
+
+This is where the second way comes in, extending base classes.
+
+### Extending Base Classes
+
+Extend the Repository base class and provide an implementation for the `getRepositoryModel` method, which should return the type of the model to be used in this repository.
 
  ```php
 class TaskRepository extends Repository
@@ -55,8 +126,7 @@ class TaskRepository extends Repository
 }
  ```
 
- while the constructor for the `Repository` class allows for model injection, you can skip injecting it and the model will be created by laravel's IOC container.
- I will probably add a general repository to take advantage of the dependency injection properly. then you won't need to extend the `Repository` class.
+ while the constructor for the `RepositoryBase` class allows for model injection, you can skip injecting it and the model will be created by laravel's IOC container.
 
  ```php
  $taskRepository = new TaskRepository;
@@ -68,10 +138,10 @@ class TaskRepository extends Repository
   $taskRepository = new TaskRepository(new Task);
   ```
 
-Now to create a caching repository for the model you also need to extend the `CachingRepository` base class.
+Now to create a caching repository for the model you also need to extend the `CachingRepositoryBase` base class.
 
 ```php
-class CachingTaskRepository extends CachingRepository
+class CachingTaskRepository extends CachingRepositoryBase
 {
     /**
      * Returns the primary cache key for this repository.
@@ -95,7 +165,7 @@ class CachingTaskRepository extends CachingRepository
 }
 ```
 
-Instantiate it using an instance of the `Repository` class and provide a cache duration and a cache store.
+Instantiate it using an instance of the `RepositoryBase` class and provide a cache duration and a cache store.
 
 ```php
 $cachingRepository = new CachingTaskRepository($taskRepository, 10, app()['cache.store']);
