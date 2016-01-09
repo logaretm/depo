@@ -2,6 +2,7 @@
 
 namespace Logaretm\Depo\Repositories;
 
+use Log;
 use Logaretm\Depo\Repositories\Contracts\CachingRepository as CachingRepositoryContract;
 use Logaretm\Depo\Repositories\RepositoryBase as RepositoryImplementation;
 
@@ -52,7 +53,7 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
      */
     public function __call ($method, $arguments)
     {
-        $this->addKeyword($method . implode('.', $arguments));
+        $this->addKeyword($method . '.' . implode('.', $arguments));
 
         $value = call_user_func_array([$this->repository, $method], $arguments);
 
@@ -84,7 +85,9 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
      */
     public function generateCacheKey($prefix)
     {
-        return md5($prefix . '.' . implode('.', $this->cacheKeywords));
+        $keyValue = $prefix . '.' . implode('.', $this->cacheKeywords);
+        Log::info('Key: '. $keyValue);
+        return md5($keyValue);
     }
 
     /**
@@ -150,8 +153,9 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
      */
     public function paginate($perPage = 15, $page = 1, $columns = array('*'))
     {
-        $key = $this->generateCacheKey('paginate' . $perPage . ($page > 1 ? '.' . $page : ''));
+        $key = $this->generateCacheKey('paginate.' . $perPage . '.' . ($page > 1 ? $page : 1));
 
+        Log::info('Cache Key: '. $key);
         $result = $this->cache->tags($this->getCacheTag())->remember($key, $this->duration, function () use($perPage, $columns, $page)
         {
             return $this->repository->paginate($perPage, $page, $columns);

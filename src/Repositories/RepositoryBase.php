@@ -129,7 +129,7 @@ abstract class RepositoryBase implements RepositoryContract
      */
     public function paginate($perPage = 15, $page = 1, $columns = array ('*'))
     {
-        $paginator = $this->model->paginate($perPage, $columns, 'page', $page);
+        $paginator = $this->query->paginate($perPage, $columns, 'page', $page);
         $this->resetScope();
 
         return $paginator;
