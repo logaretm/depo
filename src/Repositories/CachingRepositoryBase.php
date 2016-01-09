@@ -86,7 +86,7 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
     public function generateCacheKey($prefix)
     {
         $keyValue = $prefix . '.' . implode('.', $this->cacheKeywords);
-        Log::info('Key: '. $keyValue);
+
         return md5($keyValue);
     }
 
@@ -155,7 +155,6 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
     {
         $key = $this->generateCacheKey('paginate.' . $perPage . '.' . ($page > 1 ? $page : 1));
 
-        Log::info('Cache Key: '. $key);
         $result = $this->cache->tags($this->getCacheTag())->remember($key, $this->duration, function () use($perPage, $columns, $page)
         {
             return $this->repository->paginate($perPage, $page, $columns);
