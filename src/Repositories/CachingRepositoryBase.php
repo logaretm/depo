@@ -53,8 +53,6 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
      */
     public function __call ($method, $arguments)
     {
-        $this->addKeyword($method . '.' . implode('.', $arguments));
-
         $value = call_user_func_array([$this->repository, $method], $arguments);
 
         if(! $value instanceof RepositoryBase)
@@ -63,6 +61,8 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
 
             return $value;
         }
+
+        $this->addKeyword($method . '.' . implode('.', $arguments));
 
         return $this;
     }
