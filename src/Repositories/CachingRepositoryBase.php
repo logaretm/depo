@@ -74,7 +74,7 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
      */
     public function forget()
     {
-        $this->cache->tags($this->getCacheTags())->flush();
+        $this->cache->tags($this->getForgetTags())->flush();
     }
 
     /**
