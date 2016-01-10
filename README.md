@@ -176,20 +176,6 @@ Now you are ready to cache your queries, any methods that are not included in th
 $completedTasks = $cachingRepository->completed()->get();
 ```
 
-Note that the caching depends on the called method names and the parameters, something like:
-```php
-$cachingRepository->completed()->get();
-```
-
-and
-
-```php
-$cachingRepository->where('completed', true)->get();
-```
-
-will be cached under different keys, even though they return exactly the same results.
-
-
 ## License
 
 The package is licensed under the MIT license.
