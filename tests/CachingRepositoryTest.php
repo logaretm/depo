@@ -67,19 +67,19 @@ class CachingTaskRepositoryTest extends TestCase
     function check_caching_repository_key_generation(CachingRepositoryInterface $repository)
     {
         $repository->inProgress();
-        $firstKey = $repository->generateCacheKey('get');
+        $firstKey = $repository->generateCacheKey();
         $repository->resetScope();
 
         $repository->inProgress();
 
-        $secondKey = $repository->generateCacheKey('get');
+        $secondKey = $repository->generateCacheKey();
 
         $this->assertEquals($firstKey, $secondKey);
 
         $repository->resetScope();
         $repository->completed();
 
-        $thirdKey = $repository->generateCacheKey('get');
+        $thirdKey = $repository->generateCacheKey();
 
         $this->assertNotEquals($thirdKey, $secondKey);
         $repository->resetScope();

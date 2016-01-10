@@ -13,10 +13,10 @@ interface CachingRepository extends Repository
     public function forget();
 
     /**
-     * Gets a unique key for the to-be cached value.
+     * Gets a unique key for the to-be cached value. You can add another string to use in key generation.
      *
-     * @param $seed
+     * @param $additionalKey
      * @return mixed
      */
-    public function generateCacheKey($seed);
+    public function generateCacheKey($additionalKey = null);
 }

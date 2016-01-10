@@ -27,13 +27,6 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
     protected $repository;
 
     /**
-     * Makes sure that specific query methods gets logged to generate unique cache keys.
-     *
-     * @var array
-     */
-    protected $cacheKeywords = [];
-
-    /**
      * CachingRepository constructor.
      * @param $repository
      * @param $duration
@@ -62,8 +55,6 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
             return $value;
         }
 
-        $this->addKeyword($method . '.' . implode('.', $arguments));
-
         return $this;
     }
 
@@ -79,28 +70,16 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
 
     /**
      * Gets a unique key for the to-be cached value.
-     *
-     * @param $prefix
+     * @param null $additionalKey
      * @return mixed
      */
-    public function generateCacheKey($prefix)
+    public function generateCacheKey($additionalKey = null)
     {
-        $keyValue = $prefix . '.' . implode('.', $this->cacheKeywords);
+        $query = $this->repository->getQuery();
+        $connectionName = $query->getConnection()->getName();
+        $key = $connectionName . $query->toSql() . serialize($query->getBindings());
 
-        return md5($keyValue);
-    }
-
-    /**
-     * Adds a keyword to the current cache keywords array.
-     *
-     * @param $keyword
-     */
-    public function addKeyword($keyword)
-    {
-        if($keyword && ! in_array($keyword, $this->cacheKeywords))
-        {
-            $this->cacheKeywords[] = $keyword;
-        }
+        return md5($additionalKey . $key);
     }
 
     /**
@@ -112,7 +91,6 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
     public function all($columns = array('*'))
     {
         $key = md5('all');
-
         $result = $this->cache->tags($this->getCacheTag())->remember($key, $this->duration, function () use($columns)
         {
             return $this->repository->all();
@@ -131,7 +109,7 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
      */
     public function get($columns = array('*'))
     {
-        $key = $this->generateCacheKey('get');
+        $key = $this->generateCacheKey();
 
         $result = $this->cache->tags($this->getCacheTag())->remember($key, $this->duration, function () use($columns)
         {
@@ -153,7 +131,7 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
      */
     public function paginate($perPage = 15, $page = 1, $columns = array('*'))
     {
-        $key = $this->generateCacheKey('paginate.' . $perPage . '.' . ($page > 1 ? $page : 1));
+        $key = $this->generateCacheKey('paginate' . serialize([$perPage, $page, $columns]));
 
         $result = $this->cache->tags($this->getCacheTag())->remember($key, $this->duration, function () use($perPage, $columns, $page)
         {
@@ -227,7 +205,6 @@ abstract class CachingRepositoryBase implements CachingRepositoryContract
      */
     public function resetScope()
     {
-        $this->cacheKeywords = [];
         $this->repository->resetScope();
     }
 }
